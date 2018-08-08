@@ -283,14 +283,14 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
     ULONG NextRedirection;
     ULONG Index;
 #ifdef _DEBUG
-	ULONG DebugSize;
+    ULONG DebugSize;
 #endif
 
     pBucketCount = LocalAlloc(LMEM_ZEROINIT, sizeof(BUCKET_COUNT)*NumberOfBuckets);
 
     if (pBucketCount)
     {
-		*pLargestSize = 0;
+        *pLargestSize = 0;
         
         do {
             
@@ -304,10 +304,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
             pBucketCount[LowestThreadId-1].Count += pThreadContextHead->Count;
 
 
-			if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-			{
-				*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-			}
+            if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+            {
+                *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+            }
 
             /*
              * Consolidate Neighbors using redirection
@@ -328,10 +328,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                     pBucketCount[LowestThreadId-1].Count = 0;
                     LowestThreadId = NextRedirection;
 
-					if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-					{
-						*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-					}
+                    if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+                    {
+                        *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+                    }
                 }
                 else
                 {
@@ -341,10 +341,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                         pBucketCount[LowestThreadId - 1].Count += pBucketCount[NextRedirection - 1].Count;
                         pBucketCount[NextRedirection - 1].Count = 0;
 
-						if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-						{
-							*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-						}
+                        if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+                        {
+                            *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+                        }
                     }
                 }
             }
@@ -354,16 +354,16 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
         } while (pThreadContextHead);
                 
 #ifdef _DEBUG
-		/*
-		 * Debug Code
-		 */ 
-		DebugSize = 0;
+        /*
+         * Debug Code
+         */ 
+        DebugSize = 0;
         
         for(Index = 0; Index < NumberOfBuckets; Index++)
         {
             if (pBucketCount[Index].Count > DebugSize)
             {
-				DebugSize = pBucketCount[Index].Count;
+                DebugSize = pBucketCount[Index].Count;
             }
 
             if (pBucketCount[Index].Count != 0 && pBucketCount[Index].RedirectionThreadId != 0)
@@ -383,16 +383,16 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                 }
 
             }
-		}
+        }
 
-		if (DebugSize != *pLargestSize)
-		{
-			printf("Debug Size %i != Large Size %i\n", DebugSize, *pLargestSize);
-		}
+        if (DebugSize != *pLargestSize)
+        {
+            printf("Debug Size %i != Large Size %i\n", DebugSize, *pLargestSize);
+        }
 
-		/*
-		 * End Debug Code
-		 */
+        /*
+         * End Debug Code
+         */
 #endif
 
         LocalFree(pBucketCount);

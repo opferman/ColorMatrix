@@ -95,13 +95,13 @@ typedef struct _MATRIX_INTERNAL_CONTEXT {
     PMATRIX_TRACKER_INTERNAL pMatrixTracker;
     PCOLOR_MATRIX pColorMatrix;
     ULONG64 ThreadCount;
-	ULONG64 ThreadIds;
-	ULONG64 PixelsExamined;
-	ULONG64 TotalPixels;
+    ULONG64 ThreadIds;
+    ULONG64 PixelsExamined;
+    ULONG64 TotalPixels;
     HANDLE hWaitThreadsComplete;
     ULONG NumberOfWorkerThreads;
-	HTHREADPOOL hThreadPool;
-	PTHREAD_CONTEXT pThreadHead;
+    HTHREADPOOL hThreadPool;
+    PTHREAD_CONTEXT pThreadHead;
 
 } MATRIX_INTERNAL_CONTEXT, *PMATRIX_INTERNAL_CONTEXT;
 
@@ -133,11 +133,11 @@ BOOL ColorMatrix_CreateWorkerThread(PMATRIX_INTERNAL_CONTEXT pMatrixContext, PAC
 BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargestSize)
 {
     BOOL bCompleted = FALSE;
-	MATRIX_INTERNAL_CONTEXT MatrixContext = { 0 };
+    MATRIX_INTERNAL_CONTEXT MatrixContext = { 0 };
     BOOL bNoFailures;
     PACKED_CONTEXT PackedInformation;
     PTHREAD_CONTEXT pThreadContext = NULL;
-	ULONG NumberOfWorkerThreads;
+    ULONG NumberOfWorkerThreads;
 
     NumberOfWorkerThreads = ColorMatrix_Internal_GetProcessorCount();
 
@@ -146,7 +146,7 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
         NumberOfWorkerThreads = NumberOfWorkerThreads - 1;
     }
 
-	MatrixContext.hThreadPool = ThreadPool_Create(NumberOfWorkerThreads, ColorMatrix_Internal_ColorCounterWorkItem, COLOR_QUEUE_DEPTH, &MatrixContext);
+    MatrixContext.hThreadPool = ThreadPool_Create(NumberOfWorkerThreads, ColorMatrix_Internal_ColorCounterWorkItem, COLOR_QUEUE_DEPTH, &MatrixContext);
 
     if (MatrixContext.hThreadPool)
     {
@@ -163,9 +163,9 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
 
                 bNoFailures = FALSE;
                 MatrixContext.ThreadCount  = 1;
-				MatrixContext.ThreadIds    = 1;
-				MatrixContext.TotalPixels = pColorMatrix->SizeX*pColorMatrix->SizeY;
-				
+                MatrixContext.ThreadIds    = 1;
+                MatrixContext.TotalPixels = pColorMatrix->SizeX*pColorMatrix->SizeY;
+                
                 PackedInformation.u.Packed.IndexX = 0;
                 PackedInformation.u.Packed.IndexY = 0;
                 PackedInformation.u.Packed.ThreadId = 1;
@@ -174,21 +174,21 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
 
                 if (pThreadContext)
                 {
-					  MatrixContext.pThreadHead = pThreadContext;
+                      MatrixContext.pThreadHead = pThreadContext;
                       pThreadContext->PackedContext = PackedInformation;
 
-					  if (ColorMatrix_Internal_ColorCounterWorkItem(MatrixContext.hThreadPool, &MatrixContext, 0, pThreadContext))
-					  {
-						  bNoFailures = TRUE;
-					  }
+                      if (ColorMatrix_Internal_ColorCounterWorkItem(MatrixContext.hThreadPool, &MatrixContext, 0, pThreadContext))
+                      {
+                          bNoFailures = TRUE;
+                      }
                 }
 
                 if (bNoFailures)
                 {
-					if (!(InterlockedDecrement64(&MatrixContext.ThreadCount) == 0 && MatrixContext.PixelsExamined == MatrixContext.TotalPixels))
-					{
-						WaitForSingleObject(MatrixContext.hWaitThreadsComplete, INFINITE);
-					}
+                    if (!(InterlockedDecrement64(&MatrixContext.ThreadCount) == 0 && MatrixContext.PixelsExamined == MatrixContext.TotalPixels))
+                    {
+                        WaitForSingleObject(MatrixContext.hWaitThreadsComplete, INFINITE);
+                    }
 
                     ColorMatrix_Internal_CalculateLargestBlock((ULONG)(MatrixContext.ThreadIds), MatrixContext.pThreadHead, pLargestSize);
                     bCompleted = TRUE;
@@ -213,7 +213,7 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
                         {
                             LocalFree(pThreadContext->pNeighbors);
                         }
-						MatrixContext.pThreadHead = pThreadContext->pNextThread;
+                        MatrixContext.pThreadHead = pThreadContext->pNextThread;
                         LocalFree(pThreadContext);
                     }
 
@@ -229,7 +229,7 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
             LocalFree(MatrixContext.pMatrixTracker);
         }
 
-		ThreadPool_Destroy(MatrixContext.hThreadPool);
+        ThreadPool_Destroy(MatrixContext.hThreadPool);
     }
 
     return bCompleted;
@@ -250,37 +250,37 @@ BOOL ColorMatrix_SearchLargestRegion(PCOLOR_MATRIX pColorMatrix, ULONG *pLargest
 *******************************************************************************/
 BOOL ColorMatrix_CreateWorkerThread(PMATRIX_INTERNAL_CONTEXT pMatrixContext, PACKED_CONTEXT PackedInformation, ULONG Index)
 {
-	BOOL bWorkerCreated = FALSE;
-	BOOL bSwapped = FALSE;
-	PTHREAD_CONTEXT pThreadContext;
-	PTHREAD_CONTEXT pTemp;
+    BOOL bWorkerCreated = FALSE;
+    BOOL bSwapped = FALSE;
+    PTHREAD_CONTEXT pThreadContext;
+    PTHREAD_CONTEXT pTemp;
 
-	
-	pThreadContext = LocalAlloc(LMEM_ZEROINIT, sizeof(THREAD_CONTEXT));
+    
+    pThreadContext = LocalAlloc(LMEM_ZEROINIT, sizeof(THREAD_CONTEXT));
 
-	if (pThreadContext)
-	{
-		InterlockedIncrement64(&pMatrixContext->ThreadCount);
-		PackedInformation.u.Packed.ThreadId = (ULONG)InterlockedIncrement64(&pMatrixContext->ThreadIds);
-		pThreadContext->PackedContext = PackedInformation;
+    if (pThreadContext)
+    {
+        InterlockedIncrement64(&pMatrixContext->ThreadCount);
+        PackedInformation.u.Packed.ThreadId = (ULONG)InterlockedIncrement64(&pMatrixContext->ThreadIds);
+        pThreadContext->PackedContext = PackedInformation;
 
-		do { 
+        do { 
 
-			pTemp = pMatrixContext->pThreadHead;
-			pThreadContext->pNextThread = pTemp;
+            pTemp = pMatrixContext->pThreadHead;
+            pThreadContext->pNextThread = pTemp;
 
-			if (InterlockedCompareExchange64((ULONG64 *)&pMatrixContext->pThreadHead, (ULONG64)pThreadContext, (ULONG64)pTemp) == (ULONG64)pTemp)
-			{
-				bSwapped = TRUE;
-			}
-		
-		} while (bSwapped == FALSE);
-		
-		bWorkerCreated = ThreadPool_SendThreadWorkAsync(pMatrixContext->hThreadPool, 0, pThreadContext, ColorMatrix_Internal_ColorCompleted, NULL);
-	}
+            if (InterlockedCompareExchange64((ULONG64 *)&pMatrixContext->pThreadHead, (ULONG64)pThreadContext, (ULONG64)pTemp) == (ULONG64)pTemp)
+            {
+                bSwapped = TRUE;
+            }
+        
+        } while (bSwapped == FALSE);
+        
+        bWorkerCreated = ThreadPool_SendThreadWorkAsync(pMatrixContext->hThreadPool, 0, pThreadContext, ColorMatrix_Internal_ColorCompleted, NULL);
+    }
 
 
-	return bWorkerCreated;
+    return bWorkerCreated;
 }
 
 
@@ -304,14 +304,14 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
     ULONG NextRedirection;
     ULONG Index;
 #ifdef DEBUG_CODE
-	ULONG DebugSize;
+    ULONG DebugSize;
 #endif
 
     pBucketCount = LocalAlloc(LMEM_ZEROINIT, sizeof(BUCKET_COUNT)*NumberOfBuckets);
 
     if (pBucketCount)
     {
-		*pLargestSize = 0;
+        *pLargestSize = 0;
         
         do {
             
@@ -325,10 +325,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
             pBucketCount[LowestThreadId-1].Count += pThreadContextHead->Count;
 
 
-			if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-			{
-				*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-			}
+            if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+            {
+                *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+            }
 
             /*
              * Consolidate Neighbors using redirection
@@ -349,10 +349,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                     pBucketCount[LowestThreadId-1].Count = 0;
                     LowestThreadId = NextRedirection;
 
-					if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-					{
-						*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-					}
+                    if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+                    {
+                        *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+                    }
                 }
                 else
                 {
@@ -362,10 +362,10 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                         pBucketCount[LowestThreadId - 1].Count += pBucketCount[NextRedirection - 1].Count;
                         pBucketCount[NextRedirection - 1].Count = 0;
 
-						if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
-						{
-							*pLargestSize = pBucketCount[LowestThreadId - 1].Count;
-						}
+                        if (pBucketCount[LowestThreadId - 1].Count > *pLargestSize)
+                        {
+                            *pLargestSize = pBucketCount[LowestThreadId - 1].Count;
+                        }
                     }
                 }
             }
@@ -375,16 +375,16 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
         } while (pThreadContextHead);
                 
 #ifdef DEBUG_CODE
-		/*
-		 * Debug Code
-		 */ 
-		DebugSize = 0;
+        /*
+         * Debug Code
+         */ 
+        DebugSize = 0;
         
         for(Index = 0; Index < NumberOfBuckets; Index++)
         {
             if (pBucketCount[Index].Count > DebugSize)
             {
-				DebugSize = pBucketCount[Index].Count;
+                DebugSize = pBucketCount[Index].Count;
             }
 
             if (pBucketCount[Index].Count != 0 && pBucketCount[Index].RedirectionThreadId != 0)
@@ -404,16 +404,16 @@ void ColorMatrix_Internal_CalculateLargestBlock(ULONG NumberOfBuckets, PTHREAD_C
                 }
 
             }
-		}
+        }
 
-		if (DebugSize != *pLargestSize)
-		{
-			printf("Debug Size %i != Large Size %i\n", DebugSize, *pLargestSize);
-		}
+        if (DebugSize != *pLargestSize)
+        {
+            printf("Debug Size %i != Large Size %i\n", DebugSize, *pLargestSize);
+        }
 
-		/*
-		 * End Debug Code
-		 */
+        /*
+         * End Debug Code
+         */
 #endif
 
         LocalFree(pBucketCount);
@@ -492,7 +492,7 @@ BOOL ColorMatrix_Internal_AcquireColorBlock(PMATRIX_INTERNAL_CONTEXT pMatrixCont
             if (InterlockedCompareExchange64(&pMatrixContext->pMatrixTracker[Index].Color.ColorNodeAsULONG64, ColorNode.u.AsUlong64, ExistingNode.u.AsUlong64) == ExistingNode.u.AsUlong64)
             {
                 bColorBlockAcquired = TRUE;
-				InterlockedIncrement64(&pMatrixContext->PixelsExamined);
+                InterlockedIncrement64(&pMatrixContext->PixelsExamined);
             }
             else
             {
@@ -505,15 +505,15 @@ BOOL ColorMatrix_Internal_AcquireColorBlock(PMATRIX_INTERNAL_CONTEXT pMatrixCont
         }
             
     }
-	else
-	{
-		ExistingNode = pMatrixContext->pMatrixTracker[Index].Color.ColorNode;
+    else
+    {
+        ExistingNode = pMatrixContext->pMatrixTracker[Index].Color.ColorNode;
 
-		if (ExistingNode.u.Data.ColorInvalid == 0)
-		{
-			ColorMatrix_CreateWorkerThread(pMatrixContext, PackedInformation, Index);
-		}
-	}
+        if (ExistingNode.u.Data.ColorInvalid == 0)
+        {
+            ColorMatrix_CreateWorkerThread(pMatrixContext, PackedInformation, Index);
+        }
+    }
 
     return bColorBlockAcquired;
 }
