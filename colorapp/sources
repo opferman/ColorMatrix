@@ -1,0 +1,20 @@
+TARGETNAME=colorapp
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+UMENTRY=main 
+
+SOURCES= entry.c colormatrix.c
+
+INCLUDES=$(INCLUDES);..\inc
+
+C_DEFINES=$(C_DEFINES)  /O2 /Oi /SUBSYSTEM:CONSOLE
+
+USE_MSVCRT=1
+
+TARGETLIBS=$(TARGETLIBS)\
+           $(SDK_LIB_PATH)\shlwapi.lib \
+           $(SDK_LIB_PATH)\kernel32.lib \
+           $(OBJ_PATH)\..\threadlib\$O\threadlib.lib
+
+

@@ -1,0 +1,17 @@
+
+
+TARGETNAME = threadlib
+TARGETTYPE = LIBRARY
+
+
+INCLUDES = $(INCLUDES);..\inc
+
+USE_MSVCRT = 1
+
+
+
+UMTYPE = windows
+
+SOURCES = thread.c 
+
+
