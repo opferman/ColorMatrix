@@ -1,5 +1,6 @@
 dirs=threadlib\
-colorapp
+colorapp \
+colorapp_v2
 
 
 
